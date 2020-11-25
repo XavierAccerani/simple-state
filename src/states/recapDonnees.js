@@ -10,7 +10,7 @@ export default function LayoutTextFields() {
   return (
     <Box>
       <pre>
-          {values}
+          {JSON.stringify(values, null, 4)}
       </pre>
     </Box>
   );

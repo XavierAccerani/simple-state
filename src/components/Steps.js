@@ -9,29 +9,37 @@ import { Paper } from '@material-ui/core';
 
 import { useFormikContext } from 'formik';
 
-import autreNoms from '../states/autreNoms';
-import demandeNom from '../states/demandeNom';
-import recapDonnees from '../states/recapDonnees';
+import AutreNoms from '../states/autreNoms';
+import DemandeNom from '../states/demandeNom';
+import RecapDonnees from '../states/recapDonnees';
 
 import StateMachine from '../StateMachine';
 
+import natural from '../models/natural';
+import initialValues from '../models/initialValues';
+
+const STEP_NOM = 0;
+const STEP_QUESTION = 1;
+const STEP_RECAP = 2;
+const STEP_FINISHED = 3;
 
 const getSteps = () => {
   return [
-    'entrez un nom',
-    'un autre nom ?',
-    'recapitulatif',
+    'Entrez un nom',
+    'Un autre associé?',
+    'Recapitulatif',
    ];
 };
-
+    
 const getStepContent = (stepIndex) => {
+  console.log(`getStepContent(${stepIndex})`)  
   switch (stepIndex) {
     case 0:
-      return <demandeNom />;
+      return <DemandeNom/>;
     case 1:
-      return <autreNoms />;
+      return <AutreNoms/>;
     case 2:
-      return <recapDonnees />;
+      return <RecapDonnees/>;
 
     default:
       return 'Unknown stepIndex';
@@ -42,23 +50,33 @@ const MyStepper = () => {
   const [activeStep, setActiveStep] = React.useState(0);
   const steps = getSteps();
 
-  const { values} = useFormikContext();
+  const { values } = useFormikContext();
+
 
 
   const handleNext = () => {
-    console.log(StateMachine.state);
-    if (StateMachine.state === 'B' && values.question === 'oui') {
-      console.log('StateMachine.loop()');
+    console.log(`StateMachine`,StateMachine.state);
+    if (StateMachine.state === 'A') {
+      console.log('Case state A')
+          setActiveStep(STEP_QUESTION);
+          StateMachine.next();
+      }
+    else if (StateMachine.state === 'B' && values.question==="oui") {
+      console.log('Case state B and yes')
+      setActiveStep(STEP_NOM);
+      values.partners.push(natural);
+      values.index += 1;
+      values.question = '';
       StateMachine.loop();
-    } else {
-      try {
-        StateMachine.step();
-      } catch (e) {}
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
     }
-    // setState(StateMachine.state);
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  
+    else if (StateMachine.state === 'B' && values.question==="non") {
+      console.log('Case state B and no')
+      setActiveStep(STEP_RECAP);
+      StateMachine.next();
+    } else if( StateMachine.state === 'C' ) {
+      setActiveStep(STEP_FINISHED);
+      StateMachine.reset();
+    }
   };
 
   const handleBack = () => {
@@ -66,7 +84,10 @@ const MyStepper = () => {
   };
 
   const handleReset = () => {
-    setActiveStep(0);
+    setActiveStep(STEP_NOM);
+    values.question = '';
+    values.partners = [];
+    values.index = 0;
   };
 
   return (
@@ -79,7 +100,7 @@ const MyStepper = () => {
         ))}
       </Stepper>
       <div>
-        {activeStep === steps.length ? (
+        {activeStep === STEP_FINISHED ? (
           <div>
             <Paper elevation={3}>
               <Typography >
@@ -95,10 +116,15 @@ const MyStepper = () => {
             <Paper elevation={3}>
                 {getStepContent(activeStep)}
             </Paper>
+            <Paper elevation={3}>
+                State: {StateMachine.state} <br/>
+                Step: {activeStep} <br/>
+                Numero: {values.index}
+            </Paper>
 
             <Box display="flex" flexDirection="row-reverse" p={1} m={1}>
               <Button variant="contained" color="primary" onClick={handleNext}>
-                {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+                {activeStep === STEP_RECAP ? 'Finish' : 'Next'}
               </Button>
               <Button
                 disabled={activeStep === 0}
