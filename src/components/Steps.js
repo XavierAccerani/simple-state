@@ -12,15 +12,19 @@ import { useFormikContext } from 'formik';
 import AutreNoms from '../states/autreNoms';
 import DemandeNom from '../states/demandeNom';
 import RecapDonnees from '../states/recapDonnees';
+import DemandeEpoux from '../states/demandeEpoux';
 
 import StateMachine from '../StateMachine';
 
 import natural from '../models/natural';
-import initialValues from '../models/initialValues';
+// import initialValues from '../models/initialValues';
 
-const STEP_NOM = 0;
-const STEP_QUESTION = 1;
 const STEP_RECAP = 2;
+const STEP_NOM = 0;
+// pour afficher la de mande de nom de l'epoux
+const STEP_EPOUX = 0.5;
+// fin de l'affiche de demande de nom de l'epoux 
+const STEP_QUESTION = 1;
 const STEP_FINISHED = 3;
 
 const getSteps = () => {
@@ -36,6 +40,8 @@ const getStepContent = (stepIndex) => {
   switch (stepIndex) {
     case 0:
       return <DemandeNom/>;
+    case 0.5:
+      return <DemandeEpoux/>;
     case 1:
       return <AutreNoms/>;
     case 2:
@@ -56,7 +62,25 @@ const MyStepper = () => {
 
   const handleNext = () => {
     console.log(`StateMachine`,StateMachine.state);
-    if (StateMachine.state === 'A') {
+  //  condition pour passer de l'etat A a AA sans changer de step dans le stepper 
+    if (StateMachine.state === 'A' && values.mariage === 'oui') {
+      console.log('Case state A and yes')
+          setActiveStep(STEP_EPOUX);
+
+          StateMachine.stay();
+      }
+// fin condition pour passer de l'etat A a AA sans changer de step dans le stepper
+
+// condition pour passe rde l'etat AA a B et changer de step dans le stepper 
+
+else if (StateMachine.state === 'AA') {
+  console.log('Case state AA')
+      setActiveStep(STEP_QUESTION);
+      StateMachine.next();
+  }
+// fin de  condition pour passe rde l'etat AA a B et changer de step dans le stepper 
+
+    else if (StateMachine.state === 'A') {
       console.log('Case state A')
           setActiveStep(STEP_QUESTION);
           StateMachine.next();

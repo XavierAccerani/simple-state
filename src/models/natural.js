@@ -1,4 +1,6 @@
 const natural = {
-    name:''
+    name:'',
+    // mariage:'non',
+    spouse:'',
 }
 export default natural;
